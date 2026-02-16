@@ -31,16 +31,69 @@ struct OpenAIProvider: AIProvider {
     }
     
     private func extractText(_ data: Data) -> String {
-        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return ""
-        }
-        if let outputText = root["output_text"] as? String, !outputText.isEmpty {
-            return outputText
-        }
-        let output = (root["output"] as? [[String: Any]])?.first
-        let content = (output?["content"] as? [[String: Any]])?.first
-        return content?["text"] as? String ?? ""
+    guard
+        let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else { return "" }
+
+    
+    if let outputText = root["output_text"] as? String, !outputText.isEmpty {
+        return outputText
     }
+
+    
+    guard let outputs = root["output"] as? [[String: Any]] else { return "" }
+
+    
+    func stringifyJSON(_ obj: Any) -> String? {
+        guard JSONSerialization.isValidJSONObject(obj),
+              let jsonData = try? JSONSerialization.data(withJSONObject: obj, options: []),
+              let s = String(data: jsonData, encoding: .utf8)
+        else { return nil }
+        return s
+    }
+
+    
+    for out in outputs {
+        if let contents = out["content"] as? [[String: Any]] {
+            for c in contents {
+                if let t = c["type"] as? String, t == "output_json" {
+                    
+                    if let jsonObj = c["json"], let s = stringifyJSON(jsonObj), !s.isEmpty {
+                        return s
+                    }
+                    
+                    if let jsonObj = c["output"], let s = stringifyJSON(jsonObj), !s.isEmpty {
+                        return s
+                    }
+                    if let jsonObj = c["value"], let s = stringifyJSON(jsonObj), !s.isEmpty {
+                        return s
+                    }
+                }
+            }
+        }
+    }
+
+    
+    for out in outputs {
+        if let contents = out["content"] as? [[String: Any]] {
+            for c in contents {
+                if let t = c["type"] as? String, t == "output_text" {
+                    
+                    if let text = c["text"] as? String, !text.isEmpty { return text }
+                    
+                    if let textObj = c["text"] as? [String: Any],
+                       let value = textObj["value"] as? String,
+                       !value.isEmpty { return value }
+                }
+                
+                if let text = c["text"] as? String, !text.isEmpty { return text }
+            }
+        }
+    }
+
+    return ""
+}
+
     
     private func extractStatusReason(_ data: Data) -> (status: String?, reason: String?) {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
