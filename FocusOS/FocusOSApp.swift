@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct FocusOSApp: App {
+    init() {
+        OpenAIConfig.startupLog()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
         }
     }
 }

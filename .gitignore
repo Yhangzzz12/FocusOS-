@@ -1,0 +1,6 @@
+Config/OpenAI.xcconfig
+FocusOS/Config/OpenAI.xcconfig
+Config/DeepSeek.xcconfig
+FocusOS/Config/DeepSeek.xcconfig
+.modulecache/
+.swiftfiles

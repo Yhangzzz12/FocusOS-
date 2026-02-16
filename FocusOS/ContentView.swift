@@ -8,17 +8,56 @@
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack {
+            AppColors.backgroundPrimary.ignoresSafeArea()
+
+            if hasOnboarded {
+                TabView {
+                    NavigationStack {
+                        DashboardView()
+                            .focusNavigationStyle()
+                    }
+                    .tabItem { Label("Dashboard", systemImage: "square.grid.2x2.fill") }
+
+                    NavigationStack {
+                        FocusTimerView()
+                            .focusNavigationStyle()
+                    }
+                    .tabItem { Label("Focus", systemImage: "timer") }
+
+                    NavigationStack {
+                        TasksView()
+                            .focusNavigationStyle()
+                    }
+                    .tabItem { Label("Tasks", systemImage: "checklist") }
+
+                    NavigationStack {
+                        StatsView()
+                            .focusNavigationStyle()
+                    }
+                    .tabItem { Label("Stats", systemImage: "chart.bar.fill") }
+
+                    NavigationStack {
+                        SettingsView()
+                            .focusNavigationStyle()
+                    }
+                    .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                }
+            } else {
+                OnboardingView {
+                    hasOnboarded = true
         }
-        .padding()
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .accentColor(AppColors.gold)
     }
 }
 
 #Preview {
     ContentView()
+        .preferredColorScheme(.dark)
 }
